@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>数学加减大冒险 🌳</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Comic Sans MS',cursive,sans-serif;
+  background: linear-gradient(180deg, #87CEEB 0%, #98FB98 60%, #228B22 100%);
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; justify-content: center; align-items: center;
+  overflow-x: hidden; user-select: none; -webkit-user-select: none;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.clouds { position:fixed; top:0; left:0; width:100%; height:150px; pointer-events:none; z-index:0; }
+.cloud { position:absolute; background:white; border-radius:50%; opacity:0.8; animation:floatCloud linear infinite; }
+.cloud::before,.cloud::after { content:''; position:absolute; background:white; border-radius:50%; }
+.cloud1 { width:120px; height:50px; top:30px; left:10%; animation-duration:25s; border-radius:50px; }
+.cloud1::before { width:60px; height:60px; top:-30px; left:20px; }
+.cloud1::after { width:80px; height:40px; top:-15px; left:50px; }
+.cloud2 { width:100px; height:40px; top:70px; left:50%; animation-duration:20s; animation-delay:-5s; border-radius:40px; }
+.cloud2::before { width:50px; height:50px; top:-25px; left:15px; }
+.cloud2::after { width:70px; height:35px; top:-10px; left:40px; }
+.cloud3 { width:140px; height:55px; top:20px; left:75%; animation-duration:22s; animation-delay:-10s; border-radius:55px; }
+.cloud3::before { width:65px; height:65px; top:-32px; left:25px; }
+.cloud3::after { width:85px; height:45px; top:-18px; left:60px; }
+@keyframes floatCloud { from { transform:translateX(-200px); } to { transform:translateX(calc(100vw + 200px)); } }
+.ground { position:fixed; bottom:0; left:0; width:100%; height:60px; background:linear-gradient(180deg, #7CCD7C 0%, #3B7A3B 100%); z-index:0; }
+
+.container {
+  position:relative; z-index:1; background:rgba(255,255,255,0.93);
+  border-radius:24px; padding:20px max(16px, 3vw);
+  box-shadow:0 16px 48px rgba(0,0,0,0.12), 0 0 0 6px #5B8C5B;
+  width:min(95vw, 600px); text-align:center;
+  animation:popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  max-height:90vh; max-height:90dvh; overflow-y:auto;
+}
+@keyframes popIn { from { transform:scale(0.8); opacity:0; } to { transform:scale(1); opacity:1; } }
+
+.title { font-size:clamp(1.2em, 5vw, 2em); color:#2E7D32; text-shadow:2px 2px 0 #A5D6A7; margin-bottom:4px; }
+.subtitle { font-size:clamp(0.75em, 3vw, 0.95em); color:#558B2F; margin-bottom:12px; }
+
+.tree-area { position:relative; height:clamp(80px, 20vw, 120px); margin:8px 0; }
+.tree { display:inline-block; transition:transform 0.3s; position:relative; }
+.tree-body { font-size:clamp(40px, 12vw, 65px); line-height:1; }
+.tree-face { position:absolute; top:6px; left:50%; transform:translateX(-50%); font-size:clamp(14px, 3.5vw, 18px); transition:all 0.2s; }
+.tree-happy .tree-body { animation:bounce 0.5s ease; }
+.tree-sad .tree-body { animation:shake 0.5s ease; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+
+.speech {
+  position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+  background:white; border:3px solid #4CAF50; border-radius:16px;
+  padding:6px 14px; font-size:clamp(0.7em, 2.8vw, 0.85em); white-space:nowrap;
+  opacity:0; transition:opacity 0.3s; box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+.speech.show { opacity:1; }
+.speech::after { content:''; position:absolute; bottom:-10px; left:50%; transform:translateX(-50%); border:7px solid transparent; border-top-color:#4CAF50; }
+
+.progress-bar { width:100%; height:clamp(12px, 3vw, 16px); background:#E0E0E0; border-radius:10px; overflow:hidden; margin:8px 0; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1); }
+.progress-fill { height:100%; background:linear-gradient(90deg, #66BB6A, #FFD54F, #FF7043); border-radius:10px; transition:width 0.5s ease; }
+
+.info { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:8px 0; font-size:clamp(0.7em, 2.5vw, 0.9em); color:#555; }
+.info span { background:#F1F8E9; padding:4px 12px; border-radius:16px; white-space:nowrap; }
+
+.question-area { margin:12px 0; }
+.question-text {
+  font-size:clamp(1.3em, 5vw, 2.2em); font-weight:bold; color:#1B5E20;
+  background:linear-gradient(135deg, #E8F5E9, #C8E6C9);
+  border-radius:16px; padding:12px 20px; display:inline-block;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08); letter-spacing:1px; word-break:break-all;
+}
+
+.answer-area { margin:12px 0; }
+.answer-input {
+  font-size:clamp(1.3em, 5vw, 1.8em); width:min(180px, 50vw); text-align:center;
+  border:4px solid #81C784; border-radius:16px; padding:10px 12px;
+  outline:none; font-family:inherit; transition:all 0.3s;
+  -webkit-appearance:none;
+}
+.answer-input:focus { border-color:#2E7D32; box-shadow:0 0 20px rgba(76,175,80,0.3); }
+.answer-input.correct { border-color:#4CAF50; background:#E8F5E9; animation:pulse 0.4s; }
+.answer-input.wrong { border-color:#F44336; background:#FFEBEE; animation:shake 0.4s; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+.btn {
+  font-size:clamp(0.9em, 3.5vw, 1.1em); padding:clamp(8px, 2vw, 14px) clamp(16px, 5vw, 32px);
+  border:none; border-radius:24px; cursor:pointer; font-family:inherit; font-weight:bold;
+  transition:all 0.3s; margin:4px; -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation; min-height:44px; min-width:44px;
+}
+.btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,0.2); }
+.btn:active { transform:scale(0.96); }
+.btn-primary { background:linear-gradient(135deg, #66BB6A, #43A047); color:white; }
+.btn-secondary { background:linear-gradient(135deg, #FFA726, #FB8C00); color:white; }
+.btn-danger { background:linear-gradient(135deg, #EF5350, #E53935); color:white; }
+.btn-info { background:linear-gradient(135deg, #42A5F5, #1E88E5); color:white; }
+
+.feedback { font-size:clamp(1em, 3.5vw, 1.2em); font-weight:bold; margin:6px 0; min-height:28px; transition:all 0.3s; }
+.feedback.correct-msg { color:#2E7D32; }
+.feedback.wrong-msg { color:#C62828; }
+
+.particles { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10; }
+.particle { position:absolute; font-size:clamp(20px, 6vw, 30px); animation:particleUp 1s ease-out forwards; }
+@keyframes particleUp { 0%{opacity:1;transform:translateY(0)scale(1)} 100%{opacity:0;transform:translateY(-120px)scale(0.3)} }
+
+.level-map { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; margin:8px 0; }
+.level-dot { width:clamp(28px, 8vw, 36px); height:clamp(28px, 8vw, 36px); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:clamp(0.6em, 2vw, 0.75em); color:white; transition:all 0.3s; flex-shrink:0; }
+.level-dot.locked { background:#BDBDBD; }
+.level-dot.current { background:linear-gradient(135deg, #FFA726, #FB8C00); animation:glow 1.5s ease-in-out infinite; }
+.level-dot.completed { background:#4CAF50; }
+@keyframes glow { 0%,100%{box-shadow:0 0 8px #FFA726} 50%{box-shadow:0 0 20px #FF8F00} }
+
+.hint-text { font-size:clamp(0.7em, 2.5vw, 0.8em); color:#999; margin-top:6px; }
+
+.login-form { margin:12px 0; }
+.login-label { display:block; font-size:clamp(0.9em, 3.5vw, 1.05em); color:#555; margin-bottom:8px; }
+.nickname-input {
+  font-size:clamp(1em, 4vw, 1.2em); width:min(220px, 70vw); text-align:center;
+  border:3px solid #81C784; border-radius:20px; padding:10px 16px;
+  outline:none; font-family:inherit; transition:all 0.3s; margin-bottom:6px;
+  -webkit-appearance:none;
+}
+.nickname-input:focus { border-color:#2E7D32; box-shadow:0 0 15px rgba(76,175,80,0.3); }
+.login-hint { font-size:clamp(0.75em, 2.5vw, 0.85em); min-height:20px; margin:4px 0 8px; }
+
+.stars-big { line-height:1.2; }
+</style>
+</head>
+<body>
+
+<div class="clouds">
+  <div class="cloud cloud1"></div>
+  <div class="cloud cloud2"></div>
+  <div class="cloud cloud3"></div>
+</div>
+<div class="ground"></div>
+<div class="particles" id="particles"></div>
+
+<div class="container" id="container">
+
+  <!-- 登录画面 -->
+  <div id="loginScreen">
+    <h1 class="title">🧮 数学加减大冒险</h1>
+    <p class="subtitle">100以内连加连减 · 20关挑战</p>
+    <div class="tree-area">
+      <div class="tree">
+        <span class="tree-body">🌳</span>
+        <span class="tree-face" style="top:5px;">😊</span>
+      </div>
+    </div>
+    <div class="login-form">
+      <label class="login-label" for="nicknameInput">请输入你的昵称：</label>
+      <input type="text" class="nickname-input" id="nicknameInput" placeholder="输入昵称开始冒险" autocomplete="off" maxlength="10" inputmode="text">
+      <p class="login-hint" id="loginHint"></p>
+      <button class="btn btn-primary" onclick="doLogin()" style="font-size:clamp(1em, 4vw, 1.2em); padding:12px 40px;">
+        🚀 开始冒险
+      </button>
+    </div>
+  </div>
+
+  <!-- 开始画面 -->
+  <div id="startScreen" style="display:none;">
+    <h1 class="title">🌳 数学加减大冒险</h1>
+    <p class="subtitle">100以内连加连减 · 20关挑战</p>
+    <div class="tree-area">
+      <div class="tree">
+        <span class="tree-body">🌳</span>
+        <span class="tree-face" style="top:5px;">😊</span>
+      </div>
+    </div>
+    <p style="color:#666; margin:8px 0; font-size:clamp(0.8em, 3vw, 0.95em);">
+      帮助小树闯过20关数学挑战！<br>
+      每关15道<b>连加连减混合运算</b>题<br>
+      <span style="color:#E53935;">答错一题，整关重来！</span>
+    </p>
+    <button class="btn btn-primary" onclick="startGame()" style="font-size:clamp(1.1em, 4.5vw, 1.3em); padding:14px 44px;">
+      🚀 开始冒险
+    </button>
+  </div>
+
+  <!-- 游戏画面 -->
+  <div id="gameScreen" style="display:none;">
+    <h2 class="title" id="levelTitle">第 1 关</h2>
+    <div class="level-map" id="levelMap"></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="info">
+      <span>📝 <b id="qNum">1/15</b></span>
+      <span>✅ <b id="correctNow">0</b>/15</span>
+      <span>🏆 <b id="levelNum">1</b>/20</span>
+    </div>
+    <div class="tree-area">
+      <div class="tree" id="treeChar">
+        <span class="tree-body">🌳</span>
+        <span class="tree-face" style="top:5px;">🤔</span>
+      </div>
+      <div class="speech" id="speechBubble">加油，小树！</div>
+    </div>
+    <div class="question-area">
+      <div class="question-text" id="questionText">?</div>
+    </div>
+    <div class="answer-area">
+      <input type="number" class="answer-input" id="answerInput" placeholder="?" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()">✅ 确认答案</button>
+    <button class="btn btn-secondary" id="nextBtn" onclick="nextQuestion()" style="display:none;">▶ 下一题</button>
+    <button class="btn btn-danger" onclick="restartGame()" style="margin-top:8px; font-size:clamp(0.75em, 2.5vw, 0.85em);">🔄 重新开始</button>
+    <button class="btn btn-danger" onclick="quitGame()" style="margin-top:4px; font-size:clamp(0.75em, 2.5vw, 0.85em);">🚪 退出</button>
+    <p class="hint-text">键盘 Enter 提交 · 手机点按钮</p>
+  </div>
+
+  <!-- 通关画面 -->
+  <div id="levelComplete" style="display:none;">
+    <h2 style="font-size:clamp(1.4em, 5.5vw, 1.8em);">🎉 闯关成功！</h2>
+    <div class="stars-big" style="font-size:clamp(30px, 10vw, 46px);">🎉🎉🎉</div>
+    <p style="font-size:clamp(0.9em, 3.5vw, 1.1em); color:#555;" id="levelMsg"></p>
+    <div class="tree-area">
+      <div class="tree tree-happy">
+        <span class="tree-body">🌳</span>
+        <span class="tree-face" style="top:5px;">🥳</span>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="continueBtn" onclick="continueGame()" style="font-size:clamp(1em, 4vw, 1.2em);">▶ 下一关</button>
+    <button class="btn btn-secondary" onclick="quitGame()">🏠 返回首页</button>
+  </div>
+
+  <!-- 全部通关 -->
+  <div id="allComplete" style="display:none;">
+    <h2 style="font-size:clamp(1.4em, 5.5vw, 1.8em);">🏆 全部通关！</h2>
+    <p style="font-size:clamp(0.9em, 3.5vw, 1.1em); color:#FF8F00;">小树成为了数学大师！</p>
+    <div class="stars-big" style="font-size:clamp(30px, 10vw, 46px);">🌟🌟🌟</div>
+    <div class="tree-area">
+      <div class="tree tree-happy">
+        <span class="tree-body">🌳</span>
+        <span class="tree-face" style="top:5px;">😎</span>
+      </div>
+    </div>
+    <p style="color:#666; font-size:clamp(0.8em, 2.5vw, 0.9em);">恭喜完成了全部20关挑战！</p>
+    <button class="btn btn-info" onclick="location.reload()">🔄 再来一次</button>
+  </div>
+</div>
+
+<script>
+// ===== 游戏状态 =====
+var currentLevel = 1;
+var currentQuestion = 0;
+var correctCount = 0;
+var currentAnswer = 0;
+var questions = [];
+var isAnswerLocked = false;
+var TOTAL_LEVELS = 20;
+var playerNickname = '';
+var STORAGE_KEY = 'math_adventure_saves';
+var QUESTIONS_PER_LEVEL = 15;
+
+// ===== 音效 =====
+var audioCtx = null;
+function initAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+}
+function playBeep(freq, duration, type) {
+  if (!audioCtx) return;
+  type = type || 'sine';
+  try {
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+  } catch(e) {}
+}
+function playCorrect() { playBeep(523,0.1); setTimeout(function(){playBeep(659,0.1)},100); setTimeout(function(){playBeep(784,0.2)},200); }
+function playWrong() { playBeep(200,0.3,'square'); }
+function playLevelUp() { [523,659,784,1047].forEach(function(f,i){ setTimeout(function(){playBeep(f,0.2)},i*120); }); }
+
+// ===== 题目生成 =====
+function generateQuestion(level) {
+  var maxVal, numMax, subRatio;
+  if (level<=5) { maxVal=20; numMax=12; subRatio=0.3; }
+  else if (level<=10) { maxVal=50; numMax=30; subRatio=0.4; }
+  else if (level<=15) { maxVal=80; numMax=50; subRatio=0.5; }
+  else { maxVal=100; numMax=70; subRatio=0.55; }
+
+  var a = randInt(2, numMax);
+  var cum = a;
+  var parts = [a];
+
+  for (var i=0; i<2; i++) {
+    var op = Math.random() < subRatio ? '-' : '+';
+    var num;
+    if (op==='+') { num=randInt(1, Math.min(numMax, maxVal-cum)); if(num<1){op='-';num=randInt(1,Math.min(numMax,cum-1));} }
+    if (op==='-') { num=randInt(1, Math.min(numMax, cum-1)); if(num<1){op='+';num=randInt(1,Math.min(numMax,maxVal-cum));} }
+    cum = (op==='+') ? cum+num : cum-num;
+    parts.push(op); parts.push(num);
+  }
+  if (cum<0 || cum>maxVal) return generateQuestion(level);
+  return { expr: parts.join(' '), answer: cum };
+}
+function randInt(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
+function generateLevel(level) { var qs=[]; for(var i=0;i<QUESTIONS_PER_LEVEL;i++) qs.push(generateQuestion(level)); return qs; }
+
+// ===== 存档系统 =====
+function getAllSaves() { try { var d=localStorage.getItem(STORAGE_KEY); return d?JSON.parse(d):{}; } catch(e) { return{}; } }
+function saveProgress() {
+  if(!playerNickname) return;
+  var saves=getAllSaves();
+  saves[playerNickname]={nickname:playerNickname, currentLevel:currentLevel, timestamp:new Date().toISOString()};
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(saves)); } catch(e) {}
+}
+function loadProgress(nickname) { return getAllSaves()[nickname]||null; }
+function deleteProgress(nickname) { var saves=getAllSaves(); delete saves[nickname]; try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(saves)); } catch(e){} }
+
+function doLogin() {
+  initAudio();
+  var input=document.getElementById('nicknameInput');
+  var hint=document.getElementById('loginHint');
+  var name=input.value.trim();
+  if(!name) { hint.textContent='请输入昵称哦~ 📝'; hint.style.color='#E53935'; return; }
+  if(name.length>10) { hint.textContent='昵称最多10个字~'; hint.style.color='#E53935'; return; }
+  playerNickname=name;
+  var saved=loadProgress(name);
+  if(saved&&saved.currentLevel>1) {
+    currentLevel=saved.currentLevel;
+    correctCount=0; currentQuestion=0;
+    hint.textContent='欢迎回来，'+name+'！从第'+saved.currentLevel+'关继续 🚀';
+    hint.style.color='#2E7D32';
+    setTimeout(function(){ startLevel(); },800);
+  } else {
+    currentLevel=1;
+    showScreen('startScreen');
+  }
+}
+
+// ===== UI 辅助 =====
+function showScreen(id) {
+  ['loginScreen','startScreen','gameScreen','levelComplete','allComplete'].forEach(function(s){
+    document.getElementById(s).style.display=(s===id)?'block':'none';
+  });
+}
+function updateLevelMap() {
+  var map=document.getElementById('levelMap');
+  var html='';
+  for(var i=1;i<=TOTAL_LEVELS;i++) {
+    var cls='locked';
+    if(i<currentLevel) cls='completed';
+    else if(i===currentLevel) cls='current';
+    html+='<div class="level-dot '+cls+'">'+(cls==='completed'?'✓':i)+'</div>';
+  }
+  map.innerHTML=html;
+}
+function setTreeState(state) {
+  var tree=document.getElementById('treeChar');
+  var face=tree.querySelector('.tree-face');
+  tree.className='tree';
+  switch(state) {
+    case 'happy': tree.classList.add('tree-happy'); face.textContent='😄'; break;
+    case 'sad': tree.classList.add('tree-sad'); face.textContent='😢'; break;
+    case 'think': face.textContent='🤔'; break;
+    case 'celebrate': tree.classList.add('tree-happy'); face.textContent='🥳'; break;
+    case 'cool': face.textContent='😎'; break;
+  }
+}
+function showSpeech(text, duration) {
+  duration=duration||2000;
+  var bubble=document.getElementById('speechBubble');
+  bubble.textContent=text; bubble.classList.add('show');
+  clearTimeout(bubble._timeout);
+  bubble._timeout=setTimeout(function(){ bubble.classList.remove('show'); }, duration);
+}
+function spawnParticles(x, y, emoji) {
+  var container=document.getElementById('particles');
+  for(var i=0;i<6;i++) {
+    var p=document.createElement('span');
+    p.className='particle'; p.textContent=emoji;
+    p.style.left=(x+(Math.random()-0.5)*100)+'px';
+    p.style.top=(y+(Math.random()-0.5)*50)+'px';
+    p.style.animationDuration=(0.6+Math.random()*0.8)+'s';
+    container.appendChild(p);
+    setTimeout(function(){ p.remove(); },1500);
+  }
+}
+
+// ===== 游戏逻辑 =====
+function startGame() {
+  currentLevel=1; currentQuestion=0; correctCount=0;
+  deleteProgress(playerNickname);
+  startLevel();
+}
+function restartGame() {
+  currentLevel=1; currentQuestion=0; correctCount=0;
+  deleteProgress(playerNickname);
+  showScreen('loginScreen');
+  document.getElementById('loginHint').textContent='进度已清除，重新开始吧！';
+  document.getElementById('loginHint').style.color='#FF8F00';
+}
+function startLevel() {
+  questions=generateLevel(currentLevel);
+  currentQuestion=0; correctCount=0; isAnswerLocked=false;
+  showScreen('gameScreen');
+  updateLevelMap(); setTreeState('think'); showSpeech('准备好啦！',1500);
+  document.getElementById('levelTitle').textContent='第 '+currentLevel+' 关';
+  document.getElementById('levelNum').textContent=currentLevel;
+  document.getElementById('correctNow').textContent='0';
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('feedback').textContent='';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('submitBtn').style.display='inline-block';
+  document.getElementById('nextBtn').style.display='none';
+  document.getElementById('answerInput').className='answer-input';
+  showCurrentQuestion();
+}
+function showCurrentQuestion() {
+  if(currentQuestion>=QUESTIONS_PER_LEVEL) { levelComplete(); return; }
+  var q=questions[currentQuestion];
+  currentAnswer=q.answer;
+  document.getElementById('questionText').textContent=q.expr+' = ?';
+  document.getElementById('qNum').textContent=(currentQuestion+1)+'/'+QUESTIONS_PER_LEVEL;
+  document.getElementById('correctNow').textContent=correctCount;
+  document.getElementById('progressFill').style.width=((currentQuestion/QUESTIONS_PER_LEVEL)*100)+'%';
+  var input=document.getElementById('answerInput');
+  input.value=''; input.className='answer-input'; input.disabled=false;
+  setTimeout(function(){ input.focus(); },100);
+  document.getElementById('feedback').textContent='';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('submitBtn').style.display='inline-block';
+  document.getElementById('nextBtn').style.display='none';
+  isAnswerLocked=false;
+  setTreeState('think');
+  var enc=['加油，小树！','你可以的！','仔细算算~','相信你自己！','小树最棒！'];
+  showSpeech(enc[Math.floor(Math.random()*enc.length)],1500);
+}
+function submitAnswer() {
+  if(isAnswerLocked) return;
+  var input=document.getElementById('answerInput');
+  var userAnswer=parseInt(input.value);
+  if(isNaN(userAnswer)) {
+    document.getElementById('feedback').textContent='请输入一个数字哦~ 📝';
+    document.getElementById('feedback').className='feedback wrong-msg';
+    input.focus(); return;
+  }
+  isAnswerLocked=true; input.disabled=true;
+  var feedback=document.getElementById('feedback');
+  var submitBtn=document.getElementById('submitBtn');
+  var nextBtn=document.getElementById('nextBtn');
+
+  if(userAnswer===currentAnswer) {
+    correctCount++;
+    feedback.textContent='✅ 太棒了！已答对 '+correctCount+'/15 题';
+    feedback.className='feedback correct-msg';
+    input.className='answer-input correct';
+    setTreeState('happy'); showSpeech('答对啦！🎉',1500); playCorrect();
+    var rect=input.getBoundingClientRect();
+    spawnParticles(rect.left+rect.width/2, rect.top, '⭐');
+    document.getElementById('correctNow').textContent=correctCount;
+    submitBtn.style.display='none'; nextBtn.style.display='inline-block'; nextBtn.focus();
+  } else {
+    feedback.textContent='❌ 不对哦，正确答案是 '+currentAnswer+'，本关重新开始！';
+    feedback.className='feedback wrong-msg';
+    input.className='answer-input wrong';
+    setTreeState('sad'); showSpeech('做错了…重来！😢',2000); playWrong();
+    submitBtn.style.display='none';
+    document.getElementById('progressFill').style.width='0%';
+    document.getElementById('correctNow').textContent='0';
+    setTimeout(function(){ startLevel(); },2000);
+  }
+}
+function nextQuestion() {
+  currentQuestion++;
+  var input=document.getElementById('answerInput');
+  input.value=''; input.className='answer-input'; input.disabled=false; isAnswerLocked=false;
+  document.getElementById('feedback').textContent='';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('submitBtn').style.display='inline-block';
+  document.getElementById('nextBtn').style.display='none';
+  showCurrentQuestion();
+}
+function levelComplete() {
+  saveProgress();
+  showScreen('levelComplete'); setTreeState('celebrate'); playLevelUp();
+  document.getElementById('levelMsg').textContent='15道连加连减题全部答对！小树顺利过关！🌟';
+  var card=document.getElementById('levelComplete');
+  var rect=card.getBoundingClientRect();
+  spawnParticles(rect.left+rect.width/2, rect.top+rect.height/2, '🎉');
+  document.getElementById('continueBtn').style.display=currentLevel<TOTAL_LEVELS?'inline-block':'none';
+}
+function continueGame() {
+  currentLevel++; saveProgress();
+  if(currentLevel>TOTAL_LEVELS) { showScreen('allComplete'); setTreeState('cool'); return; }
+  startLevel();
+}
+function quitGame() { saveProgress(); showScreen('loginScreen'); document.getElementById('loginHint').textContent=''; }
+
+// ===== 键盘 Enter 支持 =====
+document.addEventListener('keydown', function(e) {
+  if(e.key!=='Enter') return;
+  var login=document.getElementById('loginScreen');
+  var game=document.getElementById('gameScreen');
+  if(login.style.display!=='none') doLogin();
+  else if(game.style.display!=='none') {
+    if(!isAnswerLocked) submitAnswer(); else nextQuestion();
+  }
+});
+
+// ===== 触摸设备初始化音效 =====
+document.addEventListener('touchstart', initAudio, {once:true});
+</script>
+
+</body>
+</html>
