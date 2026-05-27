@@ -154,7 +154,7 @@ body {
         <span class="tree-face" style="top:5px;">😊</span>
       </div>
     </div>
-    <div class="login-form">
+    <div class="login-form" id="loginForm">
       <label class="login-label" for="nicknameInput">请输入你的昵称：</label>
       <input type="text" class="nickname-input" id="nicknameInput" placeholder="输入昵称开始冒险" autocomplete="off" maxlength="10" inputmode="text">
       <p class="login-hint" id="loginHint"></p>
@@ -320,6 +320,10 @@ function saveProgress() {
 }
 function loadProgress(nickname) { return getAllSaves()[nickname]||null; }
 function deleteProgress(nickname) { var saves=getAllSaves(); delete saves[nickname]; try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(saves)); } catch(e){} }
+// 页面关闭前自动保存
+window.addEventListener('beforeunload', function(){ saveProgress(); });
+// iOS Safari 页面隐藏时也保存
+window.addEventListener('pagehide', function(){ saveProgress(); });
 
 function doLogin() {
   initAudio();
@@ -332,10 +336,13 @@ function doLogin() {
   var saved=loadProgress(name);
   if(saved&&saved.currentLevel>1) {
     currentLevel=saved.currentLevel;
-    correctCount=0; currentQuestion=0;
-    hint.textContent='欢迎回来，'+name+'！从第'+saved.currentLevel+'关继续 🚀';
+    hint.textContent='欢迎回来，'+name+'！上次玩到第 '+saved.currentLevel+' 关';
     hint.style.color='#2E7D32';
-    setTimeout(function(){ startLevel(); },800);
+    // 显示选择按钮
+    document.getElementById('loginForm').innerHTML=
+      '<p style="color:#2E7D32;font-weight:bold;margin-bottom:10px;">上次玩到第 '+saved.currentLevel+' 关</p>'+
+      '<button class="btn btn-primary" onclick="startLevel();showScreen(\'gameScreen\');" style="font-size:1.1em;padding:12px 30px;margin:6px;">▶ 从第 '+saved.currentLevel+' 关继续</button>'+
+      '<button class="btn btn-secondary" onclick="currentLevel=1;deleteProgress(playerNickname);showScreen(\'startScreen\');" style="margin:6px;">🔄 重新从第1关开始</button>';
   } else {
     currentLevel=1;
     showScreen('startScreen');
@@ -456,6 +463,7 @@ function submitAnswer() {
 
   if(userAnswer===currentAnswer) {
     correctCount++;
+    saveProgress(); // 每答对就存，防止中途关闭丢失
     feedback.textContent='✅ 太棒了！已答对 '+correctCount+'/15 题';
     feedback.className='feedback correct-msg';
     input.className='answer-input correct';
